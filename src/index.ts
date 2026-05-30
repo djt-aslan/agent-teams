@@ -4,6 +4,8 @@ import { Command } from 'commander';
 import { initCommand } from './commands/init.js';
 import { startCommand } from './commands/start.js';
 import { statusCommand } from './commands/status.js';
+import { nextCommand } from './commands/next.js';
+import { approveCommand, rejectCommand, retryCommand } from './commands/approve.js';
 
 const program = new Command();
 
@@ -36,5 +38,26 @@ program
   .command('status')
   .description('Show pipeline status')
   .action(() => statusCommand());
+
+program
+  .command('next')
+  .description('Advance to the next stage')
+  .action(() => nextCommand());
+
+program
+  .command('approve <stage>')
+  .description('Approve a stage after human review')
+  .action((stage) => approveCommand(stage));
+
+program
+  .command('reject <stage>')
+  .description('Reject a stage and retry')
+  .option('--reason <reason>', 'Reason for rejection')
+  .action((stage, options) => rejectCommand(stage, options.reason));
+
+program
+  .command('retry <stage>')
+  .description('Retry a failed stage')
+  .action((stage) => retryCommand(stage));
 
 program.parse(process.argv);
