@@ -12,8 +12,9 @@ function runGit(args: string): GitResult {
   try {
     const output = execSync(`git ${args}`, { encoding: 'utf-8', stdio: 'pipe' });
     return { success: true, output: output.trim() };
-  } catch (e: any) {
-    return { success: false, output: '', error: e.stderr?.trim() ?? e.message };
+  } catch (e: unknown) {
+    const err = e as { stderr?: string; message?: string };
+    return { success: false, output: '', error: err.stderr?.trim() ?? err.message ?? 'Unknown error' };
   }
 }
 

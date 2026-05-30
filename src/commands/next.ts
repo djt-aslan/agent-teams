@@ -2,8 +2,9 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadState, saveState } from '../engine/state.js';
 import { loadPipelineConfig, getStageConfig, getNextStage } from '../engine/config.js';
-import { startStage, advanceStage, setReviewStage, setHumanReviewStage, getCurrentDispatch } from '../engine/pipeline.js';
+import { startStage, setReviewStage, setHumanReviewStage, markPassed, getCurrentDispatch } from '../engine/pipeline.js';
 import { validateArtifact, getReviewVerdict } from '../engine/artifact.js';
+import { executeMerge, cleanWorktrees, isGitRepo } from '../engine/git.js';
 
 const BASE = '.agent-teams';
 
@@ -18,12 +19,12 @@ export function nextCommand(requirement?: string): void {
   const stageState = state.stages[state.current_stage];
 
   if (stageState.status === 'pending') {
-    startStage(state, state.current_stage);
-    console.log(`Starting stage: ${currentStage.stage}`);
     if (currentStage.engine) {
-      console.log(`Stage "${currentStage.stage}" is engine-executed. See merge implementation for details.`);
+      handleEngineStage(currentStage, state, config);
       return;
     }
+    startStage(state, state.current_stage);
+    console.log(`Starting stage: ${currentStage.stage}`);
     const dispatch = getCurrentDispatch(config, state, requirement);
     if (dispatch) console.log(dispatch.formatted);
   } else if (stageState.status === 'in_progress') {
@@ -68,17 +69,48 @@ export function nextCommand(requirement?: string): void {
     console.log('  reject:  agent-teams reject ' + state.current_stage);
   } else if (stageState.status === 'passed') {
     const next = getNextStage(config, state.current_stage);
-    if (!next) { console.log('All stages complete!'); return; }
-    advanceStage(state, state.current_stage, 'passed');
+    if (!next) { console.log('Pipeline complete!'); return; }
     state.current_stage = next.stage;
     saveState(state);
     console.log(`Advanced to: ${next.stage} - ${next.description}`);
     if (next.engine) {
-      console.log(`Stage "${next.stage}" will be executed by the engine.`);
+      handleEngineStage(next, state, config);
+    } else {
+      startStage(state, next.stage);
+      console.log(`Auto-starting stage: ${next.stage}`);
+      const dispatch = getCurrentDispatch(config, state, requirement);
+      if (dispatch) console.log(dispatch.formatted);
     }
   } else if (stageState.status === 'human_review') {
     console.log('Waiting for human review.');
     console.log('  approve: agent-teams approve ' + state.current_stage);
     console.log('  reject:  agent-teams reject ' + state.current_stage);
+  }
+}
+
+function handleEngineStage(stageConfig: any, state: any, config: any): void {
+  if (stageConfig.action === 'merge') {
+    if (!isGitRepo()) {
+      console.error('Not a git repository. Cannot merge.');
+      return;
+    }
+    const batchIds: string[] = Object.keys(state.stages.implementation?.batches ?? {});
+    const worktreesDir = resolvePath('worktrees');
+
+    console.log(`Engine: Merging ${batchIds.length || 0} batches...`);
+    const result = executeMerge(
+      worktreesDir,
+      batchIds,
+      'chore: agent-teams implementation complete'
+    );
+
+    if (result.success) {
+      markPassed(state, state.current_stage);
+      cleanWorktrees(worktreesDir);
+      console.log('Merge successful. Stage passed.');
+    } else {
+      console.error(`Merge failed: ${result.error}`);
+      console.log('If you cannot resolve manually, run "agent-teams next" to continue.');
+    }
   }
 }

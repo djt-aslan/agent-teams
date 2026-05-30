@@ -3,7 +3,6 @@ import { loadPipelineConfig, getStageConfig, getNextStage, validateDependencies 
 import { loadState, saveState, createInitialState, getStageState, stageExists } from './state.js';
 import type { DispatchInstruction } from '../types.js';
 import { generateWorkerDispatch, generateReviewDispatch, formatDispatchForAI } from './dispatch.js';
-import { parseFrontmatter } from './artifact.js';
 import { existsSync } from 'node:fs';
 
 export function initPipeline(pipelinePath: string): PipelineState {

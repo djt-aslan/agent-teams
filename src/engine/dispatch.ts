@@ -1,6 +1,8 @@
 import type { StageConfig, PipelineState, DispatchInstruction } from '../types.js';
 import { getStageState } from './state.js';
 
+const BASE = '.agent-teams';
+
 export function generateWorkerDispatch(
   config: StageConfig,
   state: PipelineState,
@@ -10,7 +12,7 @@ export function generateWorkerDispatch(
   if (config.depends_on) {
     for (const dep of config.depends_on) {
       const depStage = state.artifacts[dep];
-      if (depStage) artifacts.push(depStage);
+      if (depStage) artifacts.push(`${BASE}/${depStage}`);
     }
   }
 
@@ -18,7 +20,7 @@ export function generateWorkerDispatch(
     task: config.stage,
     agent: config.agent!,
     skill: config.skill!,
-    output: config.output,
+    output: `${BASE}/${config.output}`,
     context: {
       requirement,
       artifacts,
@@ -32,16 +34,16 @@ export function generateReviewDispatch(
   state: PipelineState,
   batchId?: string
 ): DispatchInstruction {
-  let artifactPath = config.output;
+  let artifactPath = `${BASE}/${config.output}`;
   if (batchId) {
-    artifactPath = `artifacts/implementation/${batchId}-report.md`;
+    artifactPath = `${BASE}/artifacts/implementation/${batchId}-report.md`;
   }
 
   return {
     task: 'review',
     agent: config.reviewer!.agent,
     skill: config.reviewer!.skill,
-    output: `artifacts/review-reports/${config.stage}${batchId ? '-' + batchId : ''}-review.md`,
+    output: `${BASE}/artifacts/review-reports/${config.stage}${batchId ? '-' + batchId : ''}-review.md`,
     context: {
       artifacts: [artifactPath],
       stage: config.stage,
