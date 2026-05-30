@@ -1,8 +1,0 @@
-src/
-docs/
-.opencode/
-openspec/
-*.test.ts
-vitest.config.ts
-tsconfig.json
-.gitignore
