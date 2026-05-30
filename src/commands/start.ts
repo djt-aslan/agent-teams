@@ -1,6 +1,7 @@
-import { existsSync, rmSync } from 'node:fs';
+import { existsSync, rmSync, readdirSync } from 'node:fs';
 import { initPipeline, getCurrentDispatch } from '../engine/pipeline.js';
 import { loadPipelineConfig, getStageConfig } from '../engine/config.js';
+import { join } from 'node:path';
 
 export function startCommand(requirement: string, options: { clean?: boolean }): void {
   const pipelinePath = '.agent-teams/pipeline.yaml';
@@ -9,9 +10,29 @@ export function startCommand(requirement: string, options: { clean?: boolean }):
     process.exit(1);
   }
 
-  if (options.clean && existsSync('.agent-teams/state.json')) {
-    rmSync('.agent-teams/state.json');
-    console.log('Cleaned previous state.');
+  const artifactsDir = '.agent-teams/artifacts';
+  if (!options.clean && existsSync(artifactsDir)) {
+    const files = readdirSync(artifactsDir);
+    if (files.length > 0) {
+      console.log('Existing artifacts found. Use --clean to start fresh, or "agent-teams status" to resume.');
+      return;
+    }
+  }
+
+  if (options.clean) {
+    if (existsSync('.agent-teams/state.json')) {
+      rmSync('.agent-teams/state.json');
+    }
+    const dirs = ['artifacts', 'worktrees'];
+    for (const dir of dirs) {
+      const full = join('.agent-teams', dir);
+      if (existsSync(full)) {
+        for (const entry of readdirSync(full)) {
+          rmSync(join(full, entry), { recursive: true, force: true });
+        }
+      }
+    }
+    console.log('Cleaned previous state and artifacts.');
   }
 
   const state = initPipeline(pipelinePath);
