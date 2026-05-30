@@ -1,0 +1,95 @@
+version: "1"
+# Agent Teams 默认流水线配置
+# 安装后可自定义：增删阶段、修改 Agent/Skill 绑定、调整门禁策略
+
+pipeline:
+  - stage: requirement
+    description: "需求澄清与结构化"
+    agent: agents/requirement-analyst.md
+    skill: skills/requirement-elicitation.md
+    output: artifacts/requirement.md
+    review: false
+    gate: manual
+
+  - stage: prd
+    description: "产品需求文档"
+    agent: agents/product-manager.md
+    skill: skills/prd-writing.md
+    reviewer:
+      agent: agents/reviewer.md
+      skill: skills/prd-review.md
+    depends_on: [requirement]
+    max_retries: 3
+    output: artifacts/prd.md
+    gate: manual
+
+  - stage: architecture
+    description: "架构方案设计（含任务拆解）"
+    agent: agents/architect.md
+    skill: skills/architecture-design.md
+    reviewer:
+      agent: agents/reviewer.md
+      skill: skills/architecture-review.md
+    depends_on: [prd]
+    max_retries: 3
+    output: artifacts/architecture.md
+    gate: manual
+
+  - stage: test-plan
+    description: "测试方案"
+    agent: agents/tester.md
+    skill: skills/test-planning.md
+    reviewer:
+      agent: agents/reviewer.md
+      skill: skills/test-plan-review.md
+    depends_on: [architecture]
+    max_retries: 3
+    output: artifacts/test-plan.md
+    gate: manual
+
+  - stage: implementation
+    description: "TDD 实现（并行任务 + Worktree 隔离）"
+    agent: agents/developer.md
+    skill: skills/tdd-implementation.md
+    mode: tdd
+    parallel: true
+    worktrees: .agent-teams/worktrees/
+    reviewer:
+      agent: agents/reviewer.md
+      skill: skills/code-review.md
+    depends_on: [test-plan]
+    max_retries: 2
+    output: artifacts/implementation/
+    gate: manual
+
+  - stage: testing
+    description: "集成测试与回归验证"
+    agent: agents/qa-engineer.md
+    skill: skills/test-execution.md
+    reviewer:
+      agent: agents/reviewer.md
+      skill: skills/test-result-review.md
+    depends_on: [implementation]
+    output: artifacts/test-results.md
+    gate: manual
+
+  - stage: review
+    description: "最终 Review"
+    agent: agents/reviewer.md
+    skill: skills/final-review.md
+    depends_on: [testing]
+    output: artifacts/review-reports/final.md
+    gate: manual
+
+  - stage: merge
+    description: "合并提交"
+    engine: true
+    depends_on: [review]
+    action: merge
+
+  - stage: report
+    description: "汇总报告"
+    agent: agents/reporter.md
+    skill: skills/report-generation.md
+    depends_on: [merge]
+    output: report.md
