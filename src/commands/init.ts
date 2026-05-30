@@ -18,6 +18,13 @@ export function initCommand(): void {
   mkdirSync(join(targetPath, 'artifacts', 'review-reports'), { recursive: true });
   mkdirSync(join(targetPath, 'worktrees'), { recursive: true });
 
+  // Copy OpenCode commands to project root
+  const opencodeSrc = join(findDefaultsPath(), '.opencode');
+  if (existsSync(opencodeSrc)) {
+    const opencodeDest = join(process.cwd(), '.opencode');
+    copyDir(opencodeSrc, opencodeDest);
+  }
+
   console.log(`
 Agent Teams initialized!
 

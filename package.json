@@ -1,5 +1,5 @@
 {
-  "name": "agent-teams",
+  "name": "@djt-aslan/agent-teams",
   "version": "0.1.0",
   "description": "AI Agent Teams for end-to-end software delivery",
   "directories": {
@@ -16,6 +16,9 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "commonjs",
   "dependencies": {
     "commander": "^15.0.0",
