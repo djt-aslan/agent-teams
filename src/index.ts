@@ -31,6 +31,7 @@ program
 program
   .command('start [requirement]')
   .description('Start a new pipeline')
+  .option('--spec <path>', 'Load requirements from file')
   .option('--clean', 'Clear previous state')
   .action((requirement, options) => {
     startCommand(requirement ?? '', options);

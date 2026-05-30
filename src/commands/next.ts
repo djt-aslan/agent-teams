@@ -5,6 +5,7 @@ import { loadPipelineConfig, getStageConfig, getNextStage } from '../engine/conf
 import { startStage, setReviewStage, setHumanReviewStage, markPassed, getCurrentDispatch } from '../engine/pipeline.js';
 import { validateArtifact, getReviewVerdict } from '../engine/artifact.js';
 import { executeMerge, cleanWorktrees, isGitRepo } from '../engine/git.js';
+import { generateFixerDispatch, formatFixerForAI } from '../engine/fixer.js';
 
 const BASE = '.agent-teams';
 
@@ -30,8 +31,14 @@ export function nextCommand(requirement?: string): void {
   } else if (stageState.status === 'in_progress') {
     const artifactPath = resolvePath(currentStage.output);
     if (!existsSync(artifactPath)) {
-      console.error(`Artifact not found: ${artifactPath}`);
-      console.log('The agent should produce the artifact specified in the dispatch instructions.');
+      // Crash recovery or retry: artifact was lost/deleted, re-dispatch worker
+      console.log(`Artifact not found (crash recovery): ${artifactPath}`);
+      console.log('Re-dispatching worker...');
+      if (currentStage.mode === 'tdd' && currentStage.parallel) {
+        cleanWorktrees(resolvePath('worktrees'));
+      }
+      const dispatch = getCurrentDispatch(config, state, requirement);
+      if (dispatch) console.log(dispatch.formatted);
       return;
     }
 
@@ -55,7 +62,11 @@ export function nextCommand(requirement?: string): void {
   } else if (stageState.status === 'review') {
     const reviewOutput = resolvePath(`artifacts/review-reports/${state.current_stage}-review.md`);
     if (!existsSync(reviewOutput)) {
-      console.error(`Review report not found: ${reviewOutput}`);
+      // Crash recovery: review was lost, re-dispatch reviewer
+      console.log(`Review report not found (crash recovery): ${reviewOutput}`);
+      console.log('Re-dispatching review...');
+      const dispatch = getCurrentDispatch(config, state, requirement);
+      if (dispatch) console.log(dispatch.formatted);
       return;
     }
 
@@ -110,7 +121,11 @@ function handleEngineStage(stageConfig: any, state: any, config: any): void {
       console.log('Merge successful. Stage passed.');
     } else {
       console.error(`Merge failed: ${result.error}`);
-      console.log('If you cannot resolve manually, run "agent-teams next" to continue.');
+      const fixerDispatch = generateFixerDispatch(
+        new Error(result.error ?? 'Unknown merge error'),
+        'Git merge operation'
+      );
+      console.log(formatFixerForAI(fixerDispatch));
     }
   }
 }

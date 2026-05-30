@@ -1,9 +1,9 @@
-import { existsSync, rmSync, readdirSync } from 'node:fs';
+import { existsSync, rmSync, readdirSync, readFileSync } from 'node:fs';
 import { initPipeline, getCurrentDispatch } from '../engine/pipeline.js';
 import { loadPipelineConfig, getStageConfig } from '../engine/config.js';
 import { join } from 'node:path';
 
-export function startCommand(requirement: string, options: { clean?: boolean }): void {
+export function startCommand(requirement: string, options: { spec?: string; clean?: boolean }): void {
   const pipelinePath = '.agent-teams/pipeline.yaml';
   if (!existsSync(pipelinePath)) {
     console.error('No .agent-teams/pipeline.yaml found. Run "agent-teams init" first.');
@@ -36,6 +36,16 @@ export function startCommand(requirement: string, options: { clean?: boolean }):
   }
 
   const state = initPipeline(pipelinePath);
+
+  let finalRequirement = requirement;
+  if (options.spec) {
+    if (!existsSync(options.spec)) {
+      console.error(`Spec file not found: ${options.spec}`);
+      process.exit(1);
+    }
+    finalRequirement = readFileSync(options.spec, 'utf-8');
+    console.log(`Loaded spec from: ${options.spec}`);
+  }
   const config = loadPipelineConfig(pipelinePath);
   const currentStage = getStageConfig(config, state.current_stage);
 
@@ -50,7 +60,7 @@ Use "agent-teams next" to dispatch the first task.
 Use "agent-teams status" to check progress.
 `);
 
-  const dispatch = getCurrentDispatch(config, state, requirement);
+  const dispatch = getCurrentDispatch(config, state, finalRequirement);
   if (dispatch) {
     console.log('--- Dispatch Instructions ---');
     console.log(dispatch.formatted);

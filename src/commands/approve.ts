@@ -1,6 +1,14 @@
+import { existsSync, rmSync } from 'node:fs';
 import { loadState, saveState } from '../engine/state.js';
 import { loadPipelineConfig, getStageConfig, getNextStage } from '../engine/config.js';
 import { markPassed, retryStage } from '../engine/pipeline.js';
+
+function cleanStageArtifacts(stageName: string): void {
+  const artifactPath = `.agent-teams/artifacts/${stageName}.md`;
+  if (existsSync(artifactPath)) rmSync(artifactPath);
+  const reviewPath = `.agent-teams/artifacts/review-reports/${stageName}-review.md`;
+  if (existsSync(reviewPath)) rmSync(reviewPath);
+}
 
 export function approveCommand(stageName: string): void {
   const state = loadState();
@@ -37,6 +45,7 @@ export function rejectCommand(stageName: string, reason?: string): void {
   }
 
   retryStage(state, stageName, config);
+  cleanStageArtifacts(stageName);
   console.log(`Stage "${stageName}" rejected${reason ? ': ' + reason : ''}. Stage will be retried.`);
   console.log('Run "agent-teams next" to re-dispatch the worker.');
 }
