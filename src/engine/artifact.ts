@@ -3,7 +3,7 @@ import { parse as parseYaml } from 'yaml';
 import type { ArtifactFrontmatter, ReviewVerdict } from '../types.js';
 
 export function parseFrontmatter(filePath: string): ArtifactFrontmatter {
-  const content = readFileSync(filePath, 'utf-8');
+  const content = readFileSync(filePath, 'utf-8').replace(/\r\n/g, '\n');
   const match = content.match(/^---\n([\s\S]*?)\n---/);
   if (!match) {
     throw new Error(`No frontmatter found in ${filePath}`);

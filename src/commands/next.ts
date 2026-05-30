@@ -1,8 +1,15 @@
 import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { loadState, saveState } from '../engine/state.js';
 import { loadPipelineConfig, getStageConfig, getNextStage } from '../engine/config.js';
 import { startStage, advanceStage, setReviewStage, setHumanReviewStage, getCurrentDispatch } from '../engine/pipeline.js';
 import { validateArtifact, getReviewVerdict } from '../engine/artifact.js';
+
+const BASE = '.agent-teams';
+
+function resolvePath(relativePath: string): string {
+  return join(BASE, relativePath);
+}
 
 export function nextCommand(requirement?: string): void {
   const state = loadState();
@@ -20,7 +27,7 @@ export function nextCommand(requirement?: string): void {
     const dispatch = getCurrentDispatch(config, state, requirement);
     if (dispatch) console.log(dispatch.formatted);
   } else if (stageState.status === 'in_progress') {
-    const artifactPath = currentStage.output;
+    const artifactPath = resolvePath(currentStage.output);
     if (!existsSync(artifactPath)) {
       console.error(`Artifact not found: ${artifactPath}`);
       console.log('The agent should produce the artifact specified in the dispatch instructions.');
@@ -45,7 +52,7 @@ export function nextCommand(requirement?: string): void {
       if (dispatch) console.log(dispatch.formatted);
     }
   } else if (stageState.status === 'review') {
-    const reviewOutput = `artifacts/review-reports/${state.current_stage}-review.md`;
+    const reviewOutput = resolvePath(`artifacts/review-reports/${state.current_stage}-review.md`);
     if (!existsSync(reviewOutput)) {
       console.error(`Review report not found: ${reviewOutput}`);
       return;
