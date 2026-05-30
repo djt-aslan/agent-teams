@@ -81,5 +81,4 @@ export interface ArtifactFrontmatter {
   tests_passed?: number;
   tests_total?: number;
   diff_summary?: string;
-  review_verdict?: ReviewVerdict;
 }

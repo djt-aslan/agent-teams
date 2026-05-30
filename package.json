@@ -1,8 +1,7 @@
 {
   "name": "agent-teams",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "version": "0.1.0",
+  "description": "AI Agent Teams for end-to-end software delivery",
   "directories": {
     "doc": "docs"
   },
