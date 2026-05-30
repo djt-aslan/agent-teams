@@ -10,7 +10,6 @@
   },
   "scripts": {
     "build": "tsc",
-    "prepare": "npm run build",
     "dev": "tsx src/index.ts",
     "test": "vitest run"
   },
