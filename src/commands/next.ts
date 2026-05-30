@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 import { loadState, saveState } from '../engine/state.js';
 import { loadPipelineConfig, getStageConfig, getNextStage } from '../engine/config.js';
-import { startStage, setReviewStage, setHumanReviewStage, getCurrentDispatch } from '../engine/pipeline.js';
+import { startStage, advanceStage, setReviewStage, setHumanReviewStage, getCurrentDispatch } from '../engine/pipeline.js';
 import { validateArtifact, getReviewVerdict } from '../engine/artifact.js';
 
 export function nextCommand(requirement?: string): void {
@@ -62,6 +62,7 @@ export function nextCommand(requirement?: string): void {
   } else if (stageState.status === 'passed') {
     const next = getNextStage(config, state.current_stage);
     if (!next) { console.log('All stages complete!'); return; }
+    advanceStage(state, state.current_stage, 'passed');
     state.current_stage = next.stage;
     saveState(state);
     console.log(`Advanced to: ${next.stage} - ${next.description}`);

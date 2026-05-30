@@ -75,3 +75,32 @@ export function getWorktreeDiff(batchId: string, baseDir: string): string {
     return '(unable to read diff)';
   }
 }
+
+export function executeMerge(
+  worktreesDir: string,
+  batchIds: string[],
+  commitMessage: string
+): GitResult {
+  for (const batchId of batchIds) {
+    const result = mergeWorktree(batchId, worktreesDir);
+    if (!result.success) {
+      if (hasConflicts()) {
+        return {
+          success: false,
+          output: '',
+          error: `Merge conflict in batch "${batchId}".\n${result.error}\n\nManual intervention required.`,
+        };
+      }
+      return result;
+    }
+  }
+
+  const commitR = commitChanges(commitMessage);
+  if (!commitR.success) {
+    if (!commitR.error?.includes('nothing to commit')) {
+      return commitR;
+    }
+  }
+
+  return pushChanges();
+}

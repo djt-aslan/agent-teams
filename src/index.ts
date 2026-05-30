@@ -6,6 +6,9 @@ import { startCommand } from './commands/start.js';
 import { statusCommand } from './commands/status.js';
 import { nextCommand } from './commands/next.js';
 import { approveCommand, rejectCommand, retryCommand } from './commands/approve.js';
+import { artifactCommand } from './commands/artifact.js';
+import { reportCommand } from './commands/report.js';
+import { listCommand } from './commands/list.js';
 
 const program = new Command();
 
@@ -59,5 +62,26 @@ program
   .command('retry <stage>')
   .description('Retry a failed stage')
   .action((stage) => retryCommand(stage));
+
+program
+  .command('artifact <stage>')
+  .description('Show artifact for a stage')
+  .action((stage) => artifactCommand(stage));
+
+program
+  .command('report')
+  .description('Show pipeline summary')
+  .action(() => reportCommand());
+
+program
+  .command('list <resource>')
+  .description('List agents, skills, or standards')
+  .action((resource) => {
+    if (!['agents', 'skills', 'standards'].includes(resource)) {
+      console.error('Resource must be: agents, skills, or standards');
+      return;
+    }
+    listCommand(resource);
+  });
 
 program.parse(process.argv);
