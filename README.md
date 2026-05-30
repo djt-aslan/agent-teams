@@ -1,81 +1,79 @@
 # Agent Teams
 
-AI Agent Teams for end-to-end software delivery. A TypeScript CLI tool that orchestrates AI agents through the full development lifecycle: requirements, design, implementation, testing, and deployment.
+端到端软件研发交付的 AI Agent 协作工具。通过多 Agent 流水线自动完成从需求到交付的全过程：需求澄清、PRD、架构设计、测试方案、TDD 实现、集成测试、代码审查、合并提交。
 
-## Install
+## 安装
 
 ```bash
-npm install -g @djt-aslan/agent-teams
-# or from GitHub
 npm install -g github:djt-aslan/agent-teams
 ```
 
-## Quick Start
+## 快速开始
 
 ```bash
-# Initialize in your project
+# 在项目中初始化
 agent-teams init
 
-# Start a pipeline
-agent-teams start "build a user authentication API"
+# 启动流水线
+agent-teams start "实现用户登录功能"
 
-# Advance through stages
+# 推进阶段
 agent-teams next
 
-# Check progress
+# 查看进度
 agent-teams status
 
-# Approve/reject stages after human review
+# 人工审批
 agent-teams approve prd
-agent-teams reject architecture --reason "missing scalability section"
+agent-teams reject architecture --reason "缺少可扩展性设计"
 ```
 
-## Pipeline
+## 流水线
 
 ```
-requirement → prd → architecture → test-plan → implementation (TDD) → testing → review → merge → report
+需求澄清 → PRD → 架构设计 → 测试方案 → TDD 实现 → 集成测试 → 最终审查 → 合并提交 → 汇总报告
 ```
 
-Each stage: Worker Agent produces artifact → Review Agent inspects quality → human approves → engine advances.
+每个阶段：Worker Agent 生产产物 → Review Agent 质量审查 → 人工确认 → 引擎推进。
 
-## CLI Commands
+## 命令列表
 
-| Command | Description |
-|---------|-------------|
-| `init` | Initialize `.agent-teams/` in workspace |
-| `start <requirement>` | Start a new pipeline |
-| `status` | Show pipeline progress |
-| `next` | Advance to next stage |
-| `approve <stage>` | Approve stage after human review |
-| `reject <stage>` | Reject stage and retry |
-| `retry <stage>` | Retry a failed stage |
-| `artifact <stage>` | View stage artifact |
-| `report` | Show pipeline summary |
-| `list <resource>` | List agents / skills / standards |
+| 命令 | 说明 |
+|---------|------|
+| `init` | 在工作区初始化 `.agent-teams/` |
+| `start <需求描述>` | 启动新流水线 |
+| `status` | 查看流水线进度 |
+| `next` | 推进到下一阶段 |
+| `approve <阶段>` | 人工审批通过 |
+| `reject <阶段>` | 驳回重做 |
+| `retry <阶段>` | 重试失败阶段 |
+| `artifact <阶段>` | 查看阶段产物 |
+| `report` | 查看流水线摘要 |
+| `list <资源>` | 列出 agents / skills / standards |
 
-## How It Works
+## 工作原理
 
-- **TS Engine** manages pipeline state machine, git operations, and artifact validation deterministically
-- **AI Agents** handle content production (Worker) and quality review (Reviewer)
-- **Human-in-the-loop** at every stage gate
-- **Git-based versioning** — all artifacts and configs follow your project's git history
-- **TDD** built into the implementation stage (RED → GREEN → REFACTOR)
+- **TS 引擎**：确定性管理流水线状态机、Git 操作、产物校验
+- **AI Agent**：负责内容生产（Worker）和质量审查（Reviewer）
+- **人在环**：每个阶段产出后由人最终确认
+- **Git 版本化**：所有产物和配置跟随项目 Git 历史
+- **TDD 内建**：实现阶段严格遵循 RED → GREEN → REFACTOR
 
-## Customization
+## 自定义
 
-After `agent-teams init`, edit `.agent-teams/`:
+`agent-teams init` 后，编辑 `.agent-teams/` 目录：
 
 ```
 .agent-teams/
-├── pipeline.yaml   # Stage definitions, agent bindings, review rules
-├── agents/         # Role definitions (who does what)
-├── skills/         # Method definitions (how to do it)
-├── standards/      # Quality standards (coding rules, review checklists)
-├── artifacts/      # Stage outputs (PRD, architecture, test results, etc.)
-└── report.md       # Final project report
+├── pipeline.yaml   # 流水线定义（阶段、Agent 绑定、审查规则）
+├── agents/         # 角色定义（谁来做）
+├── skills/         # 技能定义（怎么做）
+├── standards/      # 质量标准（编码规范、审查清单）
+├── artifacts/      # 阶段产物（PRD、架构、测试结果等）
+└── report.md       # 项目交付报告
 ```
 
-## Requirements
+## 环境要求
 
 - Node.js >= 18
 - Git
