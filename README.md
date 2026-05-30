@@ -5,7 +5,9 @@
 ## 安装
 
 ```bash
-npm install -g github:djt-aslan/agent-teams
+git clone https://github.com/djt-aslan/agent-teams.git
+cd agent-teams
+npm install -g .
 ```
 
 ## 快速开始
