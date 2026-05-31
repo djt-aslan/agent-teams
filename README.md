@@ -1,5 +1,7 @@
 # Agent Teams
 
+[![GitHub](https://img.shields.io/badge/github-djt--aslan/agent--teams-blue)](https://github.com/djt-aslan/agent-teams)
+
 端到端软件研发交付的 AI Agent 协作工具。通过多 Agent 流水线自动完成从需求到交付的全过程：需求澄清、PRD、架构设计、测试方案、TDD 实现、集成测试、代码审查、合并提交。
 
 ## 安装

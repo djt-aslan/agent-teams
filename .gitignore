@@ -2,3 +2,5 @@
 *.js.map
 .env
 demo-project/
+demo/
+test-bundle/
